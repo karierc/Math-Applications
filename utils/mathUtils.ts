@@ -1,59 +1,68 @@
 
+export const calculateGcf = (a: number, b: number, c: number): number => {
+  const gcd2 = (x: number, y: number): number => {
+    x = Math.abs(x);
+    y = Math.abs(y);
+    while (y) {
+      const t = y;
+      y = x % y;
+      x = t;
+    }
+    return x;
+  };
+  return gcd2(a, gcd2(b, c));
+};
+
 export const parseEquation = (input: string) => {
-  // Clean spaces and make lowercase
   const str = input.replace(/\s+/g, '').toLowerCase();
-  
-  // Regex for ax^2 + bx + c (=0 is now optional)
   const regex = /^([+-]?\d*)x\^2([+-]?\d*)x([+-]?\d*)(?:=0)?$/;
   const match = str.match(regex);
   
   if (!match) return null;
   
-  const parseCoeff = (c: string, def: number) => {
+  const parseCoeff = (c: string) => {
     if (c === "" || c === "+") return 1;
     if (c === "-") return -1;
     return parseInt(c);
   };
 
-  const a = parseCoeff(match[1], 1);
-  const b = parseCoeff(match[2], 0);
+  const a = parseCoeff(match[1]);
+  const b = parseCoeff(match[2]);
   const c = parseInt(match[3] || "0");
 
   return { a, b, c };
 };
 
 /**
- * Normalizes a math string for comparison by removing spaces and 
- * redundant '1' coefficients before variables.
+ * Evaluates a string that might be a fraction (1/2) or decimal (0.5) 
+ * into a single float for comparison.
  */
+export const evaluateNumeric = (val: string): number => {
+  if (val.includes('/')) {
+    const [num, den] = val.split('/').map(s => parseFloat(s.trim()));
+    return num / den;
+  }
+  return parseFloat(val);
+};
+
+export const areEquiv = (val1: string | number, val2: string | number, tolerance = 0.0001): boolean => {
+  const n1 = typeof val1 === 'string' ? evaluateNumeric(val1) : val1;
+  const n2 = typeof val2 === 'string' ? evaluateNumeric(val2) : val2;
+  return Math.abs(n1 - n2) < tolerance;
+};
+
 export const normalizeMathString = (input: string): string => {
   let str = input.replace(/\s+/g, '').toLowerCase();
-  // Remove leading +
   if (str.startsWith('+')) str = str.substring(1);
-  // Replace +- with -
-  str = str.replace(/\+\-/g, '-');
-  // Replace -+ with -
-  str = str.replace(/\-\+/g, '-');
-  // Remove '1' before 'x'
+  str = str.replace(/\+\-/g, '-').replace(/\-\+/g, '-');
   str = str.replace(/(^|[+-])1x/g, '$1x');
-  
   return str;
 };
 
-/**
- * Strips the '=0' suffix if present for expression-only comparison.
- */
-export const stripEquation = (input: string): string => {
-  return input.replace(/=0$/, '');
-};
+export const stripEquation = (input: string): string => input.replace(/=0$/, '');
 
-/**
- * Formats math strings for the UI by replacing notation like ^2 
- * with actual superscript characters.
- */
 export const formatMathDisplay = (text: string): string => {
   if (!text) return "";
-  // Replace ^2 with superscript 2
   return text.replace(/\^2/g, '²');
 };
 
