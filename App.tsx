@@ -64,7 +64,6 @@ const App: React.FC = () => {
       case Step.ENTER_EQUATION:
         const parsed = parseEquation(userInput);
         if (parsed) {
-          // Store raw without =0 for consistency in factoring steps if user didn't provide it
           nextStepData = { ...parsed, raw: stripEquation(userInput), ac: parsed.a * parsed.c };
           isCorrect = true;
         } else {
@@ -111,7 +110,6 @@ const App: React.FC = () => {
         const fact1 = equation.factor1;
         const fact2 = equation.factor2;
         
-        // Expected strings without =0
         const expected1 = normalizeMathString(`${formatTerm(equation.a, "x^2", true)}${formatTerm(fact1, "x")}${formatTerm(fact2, "x")}${formatConst(equation.c)}`);
         const expected2 = normalizeMathString(`${formatTerm(equation.a, "x^2", true)}${formatTerm(fact2, "x")}${formatTerm(fact1, "x")}${formatConst(equation.c)}`);
         
@@ -151,7 +149,6 @@ const App: React.FC = () => {
         break;
 
       case Step.SET_TO_ZERO:
-        // Now we explicitly require =0
         if (userInput.includes('=0')) {
           nextStepData = { zeroEquations: userInput };
           isCorrect = true;
@@ -365,38 +362,81 @@ const App: React.FC = () => {
 
       case Step.FIND_FACTORS:
         const testSum = (parseInt(testFactors.f1) || 0) + (parseInt(testFactors.f2) || 0);
+        const testProduct = (parseInt(testFactors.f1) || 0) * (parseInt(testFactors.f2) || 0);
         return (
-          <div className="space-y-8">
-            <div className="bg-blue-50 p-6 rounded-2xl border-2 border-blue-100 space-y-4">
-              <h4 className="text-sm font-bold text-blue-400 uppercase tracking-widest">Scratchpad (Testing)</h4>
-              <div className="flex flex-wrap gap-4 items-center">
-                <input 
-                  type="number" 
-                  value={testFactors.f1} 
-                  onChange={(e) => setTestFactors({ ...testFactors, f1: e.target.value })}
-                  className="w-24 p-3 border-2 border-white rounded-lg text-xl text-center shadow-sm"
-                  placeholder="?"
-                />
-                <span className="text-2xl font-bold text-blue-300">+</span>
-                <input 
-                  type="number" 
-                  value={testFactors.f2} 
-                  onChange={(e) => setTestFactors({ ...testFactors, f2: e.target.value })}
-                  className="w-24 p-3 border-2 border-white rounded-lg text-xl text-center shadow-sm"
-                  placeholder="?"
-                />
-                <span className="text-2xl font-bold text-blue-300">=</span>
-                <div className={`w-24 p-3 border-2 rounded-lg text-xl text-center font-bold shadow-inner ${
-                  testSum === equation.b ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-white border-blue-100 text-blue-700'
-                }`}>
-                  {testSum}
-                </div>
-              </div>
-              <p className="text-xs text-blue-400 italic">Use this area to test combinations!</p>
+          <div className="space-y-8 animate-fadeIn">
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-inner">
+               <h3 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
+                 <i className="fas fa-search-plus text-blue-500"></i>
+                 Step 5: Find your magic numbers
+               </h3>
+               <p className="text-slate-600 leading-relaxed">
+                 You need to find two numbers that <strong>satisfy both</strong> of these conditions:
+               </p>
+               <ul className="mt-3 space-y-2">
+                 <li className="flex items-center gap-3">
+                   <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">1</div>
+                   <span className="text-slate-700">They must multiply to <span className="font-bold text-blue-600 underline">ac = {equation.ac}</span></span>
+                 </li>
+                 <li className="flex items-center gap-3">
+                   <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">2</div>
+                   <span className="text-slate-700">They must add up to <span className="font-bold text-blue-600 underline">b = {equation.b}</span></span>
+                 </li>
+               </ul>
             </div>
 
-            <div className="space-y-4">
-              <label className="block text-lg font-bold text-slate-700">Step 5: Final Chosen Factors</label>
+            <div className="bg-blue-50 p-6 rounded-2xl border-2 border-blue-100 space-y-6">
+              <div>
+                <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                  <i className="fas fa-pencil-alt"></i>
+                  Experimental Zone (Scratchpad)
+                </h4>
+                <p className="text-xs text-blue-500 mb-4">Type different numbers here to check their product and sum before submitting.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 justify-center">
+                    <input 
+                      type="number" 
+                      value={testFactors.f1} 
+                      onChange={(e) => setTestFactors({ ...testFactors, f1: e.target.value })}
+                      className="w-24 p-3 border-2 border-white rounded-lg text-xl text-center shadow-sm focus:border-blue-300 outline-none transition-all"
+                      placeholder="?"
+                    />
+                    <span className="text-2xl font-bold text-blue-300">&times;</span>
+                    <input 
+                      type="number" 
+                      value={testFactors.f2} 
+                      onChange={(e) => setTestFactors({ ...testFactors, f2: e.target.value })}
+                      className="w-24 p-3 border-2 border-white rounded-lg text-xl text-center shadow-sm focus:border-blue-300 outline-none transition-all"
+                      placeholder="?"
+                    />
+                  </div>
+                  <div className={`text-center py-2 px-4 rounded-lg font-bold border-2 transition-all ${
+                    testProduct === equation.ac ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-white border-blue-100 text-blue-300'
+                  }`}>
+                    Product: {testProduct} {testProduct === equation.ac && '✓'}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 justify-center">
+                    <span className="w-24 text-center text-xl font-medium text-slate-500">{testFactors.f1 || '?'}</span>
+                    <span className="text-2xl font-bold text-blue-300">+</span>
+                    <span className="w-24 text-center text-xl font-medium text-slate-500">{testFactors.f2 || '?'}</span>
+                  </div>
+                  <div className={`text-center py-2 px-4 rounded-lg font-bold border-2 transition-all ${
+                    testSum === equation.b ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-white border-blue-100 text-blue-300'
+                  }`}>
+                    Sum: {testSum} {testSum === equation.b && '✓'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <label className="block text-lg font-bold text-slate-700">Ready? Enter your chosen factors below:</label>
               <div className="flex flex-wrap gap-4 items-center">
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-slate-400 font-bold uppercase ml-1">Factor 1</span>
