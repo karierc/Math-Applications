@@ -1,0 +1,5 @@
+{
+  "name": "Quadratic Equation Tutor",
+  "description": "An interactive, step-by-step secondary math tutor for factoring and solving quadratic equations with AI-powered hints.",
+  "requestFramePermissions": []
+}
